@@ -12,7 +12,9 @@ import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.ImageView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,28 +39,30 @@ public class MoviesFragment extends Fragment {
 
         mImageView = (ImageView) rootView.findViewById(R.id.grid_item_movies_imageview);
         mGridView  = (GridView) rootView.findViewById(R.id.gridview_movies);
-        arrayMovie = new ArrayList<>();
-        Movie movie = new Movie(1);
 
-        String rootUrl = "http://image.tmdb.org/t/p/";
-        String size = "w185";
-        String posterPath = "/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg";
-        String fullUrl    = rootUrl + size + posterPath;
-
-        movie.setPosterPath(fullUrl);
-        arrayMovie.add(movie);
-
-        mMoviesAdapter = new ImageAdapter(getActivity(), arrayMovie, mImageView);
+        mMoviesAdapter = new ImageAdapter(getActivity(), new ArrayList<Movie>(), mImageView);
 
         mGridView.setAdapter(mMoviesAdapter);
 
         return rootView;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateMovies();
+    }
+
+    private void updateMovies() {
+        FetchMoviesTask task = new FetchMoviesTask();
+        task.execute("popularity.desc");
+    }
 
     public class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>>{
 
         private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
+        private Movie movie;
+        ArrayList<Movie> listaMovie;
 
         @Override
         protected ArrayList<Movie> doInBackground(String... params) {
@@ -85,6 +89,8 @@ public class MoviesFragment extends Fragment {
                         .appendQueryParameter(SORT_BY_PARAM, params[0])
                         .appendQueryParameter(API_KEY_PARAM, "4043c8fc1b4aa2f9230bf75988cd81de")
                         .build();
+
+                Log.v(LOG_TAG, builtUri.toString());
 
                 URL url = new URL(builtUri.toString());
 
@@ -148,8 +154,74 @@ public class MoviesFragment extends Fragment {
             return null;
         }
 
-        private ArrayList<Movie> getMovieDataFromJson(String movieJsonStr) {
-            return null;
+        @Override
+        protected void onPostExecute(ArrayList<Movie> listaMovie) {
+            super.onPostExecute(listaMovie);
+            if (listaMovie != null){
+                mMoviesAdapter.clear();
+                for (Movie movie : listaMovie ){
+                    mMoviesAdapter.add(movie);
+                }
+            }
+        }
+
+        private ArrayList<Movie> getMovieDataFromJson(String movieJsonStr) throws JSONException {
+
+            final String OWM_RESULTS = "results";
+            final String OWM_ID = "id";
+            final String OWM_OVERVIEW = "overview";
+            final String OWM_RELEASE_DATE = "release_date";
+            final String OWM_POSTER_PATH = "poster_path";
+            final String OWM_ORIGINAL_TITLE = "original_title";
+            final String OWM_VOTE_AVERAGE = "vote_average";
+
+            Log.v(LOG_TAG, movieJsonStr);
+            JSONObject moviesJson = new JSONObject(movieJsonStr);
+            JSONArray  moviesArray = moviesJson.getJSONArray(OWM_RESULTS);
+            listaMovie = new ArrayList<>();
+
+            for (int i = 0; i < moviesArray.length(); i++){
+                long id;
+                String originalTitle;
+                String posterPath;
+                String overview;
+                double voteAverage;
+                String releaseDate;
+
+                id = moviesArray.getJSONObject(i).getLong(OWM_ID);
+                overview = moviesArray.getJSONObject(i).getString(OWM_OVERVIEW);
+                posterPath = moviesArray.getJSONObject(i).getString(OWM_POSTER_PATH);
+                originalTitle = moviesArray.getJSONObject(i).getString(OWM_ORIGINAL_TITLE);
+                voteAverage = moviesArray.getJSONObject(i).getDouble(OWM_VOTE_AVERAGE);
+                releaseDate = moviesArray.getJSONObject(i).getString(OWM_RELEASE_DATE);
+
+                String posterFullPath = getFullImagePath(posterPath);
+
+                movie = new Movie();
+                movie.setId(id);
+                movie.setOverview(overview);
+                movie.setPosterPath(posterFullPath);
+                movie.setOriginalTitle(originalTitle);
+                movie.setVoteAverage(voteAverage);
+                movie.setReleaseDate(releaseDate);
+
+                listaMovie.add(movie);
+
+
+            }
+            return listaMovie;
+        }
+
+        private String getFullImagePath(String posterPath) {
+            String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/";
+            String SIZE = "w185";
+
+            Uri builtImageUri = Uri.parse(IMAGE_BASE_URL).buildUpon()
+                    .appendPath(SIZE)
+                    .appendEncodedPath(posterPath)
+                    .build();
+
+            return builtImageUri.toString();
         }
 
 

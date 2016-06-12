@@ -30,6 +30,16 @@ public class ImageAdapter extends BaseAdapter {
         return mListMovies.size();
     }
 
+    public void clear(){
+        mListMovies.clear();
+        notifyDataSetChanged();
+    }
+
+    public void add(Movie movie){
+        mListMovies.add(movie);
+        notifyDataSetChanged();
+    }
+
     @Override
     public Object getItem(int position) {
         return mListMovies.get(position);
@@ -46,15 +56,15 @@ public class ImageAdapter extends BaseAdapter {
         if (convertView == null) {
             // if it's not recycled, initialize some attributes
             mImageView = new ImageView(mContext);
-            mImageView.setLayoutParams(new GridView.LayoutParams(85, 85));
+            mImageView.setLayoutParams(new GridView.LayoutParams((int)mContext.getResources().getDimension(R.dimen.width),
+                    (int)mContext.getResources().getDimension(R.dimen.height)));
             mImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mImageView.setPadding(8, 8, 8, 8);
         } else {
             mImageView = (ImageView) convertView;
         }
 
-        Picasso.with(mContext).load("http://image.tmdb.org/t/p/w92/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg").into(mImageView);
-
+        Picasso.with(mContext).load(mListMovies.get(position).getPosterPath()).into(mImageView);
 
         return mImageView;
     }
