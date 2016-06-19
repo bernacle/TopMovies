@@ -1,8 +1,10 @@
 package com.brunosimplicio.topmovies;
 
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -55,7 +57,9 @@ public class MoviesFragment extends Fragment {
 
     private void updateMovies() {
         FetchMoviesTask task = new FetchMoviesTask();
-        task.execute("popularity.desc");
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sort_by = sharedPreferences.getString(getString(R.string.pref_sort_key), getString(R.string.pref_default));
+        task.execute(sort_by);
     }
 
     public class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>>{
