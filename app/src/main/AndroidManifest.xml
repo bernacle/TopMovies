@@ -25,6 +25,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.brunosimplicio.topmovies.MainActivity" />
         </activity>
+        <activity android:name=".DetailActivity"></activity>
     </application>
 
 </manifest>

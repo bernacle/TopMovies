@@ -1,5 +1,6 @@
 package com.brunosimplicio.topmovies;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -11,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
 
@@ -32,6 +34,7 @@ public class MoviesFragment extends Fragment {
     private ImageAdapter mMoviesAdapter;
     private GridView mGridView;
     private ImageView mImageView;
+    private static final String MOVIE = "movie";
     private ArrayList<Movie> arrayMovie;
 
     @Nullable
@@ -45,6 +48,17 @@ public class MoviesFragment extends Fragment {
         mMoviesAdapter = new ImageAdapter(getActivity(), new ArrayList<Movie>(), mImageView);
 
         mGridView.setAdapter(mMoviesAdapter);
+
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Movie movie = mMoviesAdapter.getItem(position);
+                Intent intent = new Intent(getActivity(), DetailActivity.class)
+                        .putExtra(MOVIE, movie);
+                startActivity(intent);
+            }
+        });
 
         return rootView;
     }
